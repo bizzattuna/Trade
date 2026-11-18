@@ -1,0 +1,1473 @@
+<!DOCTYPE html>
+<html lang="tr" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trade Günlüğü & Risk Disiplini</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    colors: {
+                        void: '#000000',
+                        obsidian: '#0B0E14',
+                        surface: '#131822',
+                        surfaceHover: '#1A212E',
+                        borderSubtle: '#232B3A',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #000000;
+            color: #F3F4F6;
+            font-family: 'Inter', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .tabular-nums {
+            font-variant-numeric: tabular-nums;
+        }
+        /* Özel kaydırma çubuğu */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0B0E14;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #232B3A;
+            border-radius: 9999px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #374151;
+        }
+        @keyframes pulseGlow {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        .animate-pulse-subtle {
+            animation: pulseGlow 2.5s infinite ease-in-out;
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-void text-gray-100 flex flex-col selection:bg-emerald-500/30 selection:text-emerald-200">
+
+    <!-- Üst Hesap ve Navigasyon Çubuğu -->
+    <header class="sticky top-0 z-30 bg-obsidian/95 backdrop-blur-md border-b border-borderSubtle">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
+            
+            <!-- Marka & Aktif Hesap Bilgisi -->
+            <div class="flex items-center justify-between gap-3">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-500/20 to-emerald-500/5 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                        </svg>
+                    </div>
+                    <div>
+                        <h1 class="text-base sm:text-lg font-bold tracking-tight text-white leading-none">Trade Günlüğü</h1>
+                        <p class="text-[11px] text-gray-400 mt-1">Risk Disiplini & Performans Takvimi</p>
+                    </div>
+                </div>
+
+                <!-- Mobil Yeni İşlem Butonu -->
+                <button onclick="openTradeModal()" class="lg:hidden inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-black font-semibold text-xs transition shadow-lg shadow-emerald-500/10">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path></svg>
+                    İşlem Ekle
+                </button>
+            </div>
+
+            <!-- Çoklu Hesap Seçici Sekmeleri -->
+            <div class="flex items-center gap-2 overflow-x-auto pb-1 lg:pb-0" id="accountTabsContainer">
+                <!-- Dinamik olarak JS ile doldurulacak -->
+            </div>
+
+            <!-- Masaüstü Aksiyonlar -->
+            <div class="hidden lg:flex items-center gap-2.5">
+                <button onclick="openAccountSettingsModal()" class="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-surface hover:bg-surfaceHover border border-borderSubtle text-gray-300 text-xs font-medium transition" title="Aktif Hesap İsmini ve Bakiyesini Düzenle">
+                    <svg class="w-3.5 h-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                    Hesabı Düzenle
+                </button>
+                <button onclick="openTradeModal()" class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-black font-semibold text-xs transition shadow-lg shadow-emerald-500/15">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path></svg>
+                    Yeni İşlem Gir
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Ana İçerik Alanı -->
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-5 space-y-5">
+
+        <!-- Aktif Hesap Başlığı ve Özet KPI Kartları -->
+        <section class="space-y-3">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+                <div class="flex items-center gap-2">
+                    <span class="inline-block w-2 h-2 rounded-full bg-emerald-400"></span>
+                    <h2 id="activeAccountTitle" class="text-sm sm:text-base font-semibold text-white">Account 1</h2>
+                    <button onclick="openAccountSettingsModal()" class="text-xs text-gray-400 hover:text-emerald-400 underline decoration-dotted underline-offset-4 transition ml-1">
+                        (İsmi / Bakiyeyi Değiştir)
+                    </button>
+                </div>
+                <div class="flex items-center gap-2 text-xs text-gray-400 font-mono">
+                    <span>Başlangıç: <strong id="kpiStartBalance" class="text-gray-200">$10,000</strong></span>
+                    <span>•</span>
+                    <span>Güncel: <strong id="kpiCurrentBalance" class="text-white">$10,000</strong></span>
+                </div>
+            </div>
+
+            <!-- 5 KPI Kartı -->
+            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+                <div class="bg-surface border border-borderSubtle rounded-2xl p-3.5">
+                    <div class="text-[11px] font-medium text-gray-400 uppercase tracking-wider">Toplam Net PnL</div>
+                    <div id="kpiNetPnl" class="mt-1.5 text-lg sm:text-xl font-bold font-mono tabular-nums text-white">$0.00</div>
+                    <div id="kpiNetPnlPct" class="text-[11px] font-mono text-gray-400 mt-0.5">%0.00 büyüme</div>
+                </div>
+
+                <div class="bg-surface border border-borderSubtle rounded-2xl p-3.5">
+                    <div class="text-[11px] font-medium text-gray-400 uppercase tracking-wider">Net R Performansı</div>
+                    <div id="kpiNetR" class="mt-1.5 text-lg sm:text-xl font-bold font-mono tabular-nums text-white">0.00R</div>
+                    <div id="kpiAvgR" class="text-[11px] font-mono text-gray-400 mt-0.5">Ort: 0.00R / işlem</div>
+                </div>
+
+                <div class="bg-surface border border-borderSubtle rounded-2xl p-3.5">
+                    <div class="text-[11px] font-medium text-gray-400 uppercase tracking-wider">Kazanma Oranı</div>
+                    <div id="kpiWinRate" class="mt-1.5 text-lg sm:text-xl font-bold font-mono tabular-nums text-white">%0</div>
+                    <div id="kpiWinLossCount" class="text-[11px] font-mono text-gray-400 mt-0.5">0K / 0Z / 0B</div>
+                </div>
+
+                <div class="bg-surface border border-borderSubtle rounded-2xl p-3.5">
+                    <div class="text-[11px] font-medium text-gray-400 uppercase tracking-wider">Toplam İşlem</div>
+                    <div id="kpiTotalTrades" class="mt-1.5 text-lg sm:text-xl font-bold font-mono tabular-nums text-white">0</div>
+                    <div id="kpiTopPair" class="text-[11px] text-gray-400 mt-0.5 truncate">En çok: —</div>
+                </div>
+
+                <div class="col-span-2 sm:col-span-1 bg-surface border border-borderSubtle rounded-2xl p-3.5" id="dailyDisciplineCard">
+                    <div class="text-[11px] font-medium text-gray-400 uppercase tracking-wider">Bugünkü Disiplin</div>
+                    <div id="kpiTodayCount" class="mt-1.5 text-lg sm:text-xl font-bold font-mono tabular-nums text-emerald-400">0 İşlem</div>
+                    <div id="kpiTodayStatus" class="text-[11px] text-emerald-400/90 mt-0.5">Zihin berrak, limit ideal</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Görünüm Geçiş Sekmeleri (Takvim & Gün Detayı / Tüm Geçmiş İşlemler) -->
+        <div class="flex items-center justify-between border-b border-borderSubtle pb-2">
+            <div class="flex items-center gap-2">
+                <button id="tabBtnCalendar" onclick="switchMainTab('calendar')" class="px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-surface text-white border border-borderSubtle transition">
+                    📅 Takvim & Günlük Analiz
+                </button>
+                <button id="tabBtnHistory" onclick="switchMainTab('history')" class="px-3.5 py-2 rounded-xl text-xs sm:text-sm font-medium text-gray-400 hover:text-white transition">
+                    📋 Geçmiş İşlemler (<span id="historyBadgeCount">0</span>)
+                </button>
+            </div>
+            <button onclick="openTradeModal()" class="text-xs font-semibold text-emerald-400 hover:text-emerald-300 flex items-center gap-1">
+                <span>+ Hızlı İşlem Gir</span>
+            </button>
+        </div>
+
+        <!-- SEKME 1: TAKVİM VE SEÇİLİ GÜN DETAYI -->
+        <div id="viewCalendar" class="grid grid-cols-1 lg:grid-cols-12 gap-5">
+            
+            <!-- Sol / Ana Kolon: Aylık Takvim -->
+            <div class="lg:col-span-8 bg-obsidian border border-borderSubtle rounded-2xl p-4 sm:p-5 flex flex-col">
+                <!-- Takvim Üst Kontrol -->
+                <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+                    <div class="flex items-center gap-2">
+                        <button onclick="changeMonth(-1)" class="p-2 rounded-xl bg-surface hover:bg-surfaceHover border border-borderSubtle text-gray-300 transition" title="Önceki Ay">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                        </button>
+                        <h3 id="calendarMonthLabel" class="text-base sm:text-lg font-bold text-white min-w-[150px] text-center">Kasım 2026</h3>
+                        <button onclick="changeMonth(1)" class="p-2 rounded-xl bg-surface hover:bg-surfaceHover border border-borderSubtle text-gray-300 transition" title="Sonraki Ay">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                        </button>
+                    </div>
+
+                    <div class="flex items-center gap-2">
+                        <span id="monthSummaryPill" class="px-2.5 py-1 rounded-lg bg-surface border border-borderSubtle text-xs font-mono text-gray-300">
+                            Ay Net: $0
+                        </span>
+                        <button onclick="goToToday()" class="px-3 py-1.5 rounded-xl bg-surface hover:bg-surfaceHover border border-borderSubtle text-xs font-medium text-gray-200 transition">
+                            Bugüne Git
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Haftanın Günleri Başlıkları -->
+                <div class="grid grid-cols-7 gap-1.5 sm:gap-2 mb-2 text-center">
+                    <div class="text-[11px] font-semibold text-gray-500 uppercase">Pzt</div>
+                    <div class="text-[11px] font-semibold text-gray-500 uppercase">Sal</div>
+                    <div class="text-[11px] font-semibold text-gray-500 uppercase">Çar</div>
+                    <div class="text-[11px] font-semibold text-gray-500 uppercase">Per</div>
+                    <div class="text-[11px] font-semibold text-gray-500 uppercase">Cum</div>
+                    <div class="text-[11px] font-semibold text-gray-500 uppercase text-amber-500/70">Cmt</div>
+                    <div class="text-[11px] font-semibold text-gray-500 uppercase text-amber-500/70">Paz</div>
+                </div>
+
+                <!-- Takvim Gün Hücreleri -->
+                <div id="calendarGrid" class="grid grid-cols-7 gap-1.5 sm:gap-2 flex-1">
+                    <!-- JS ile doldurulacak -->
+                </div>
+
+                <!-- Renk Açıklaması -->
+                <div class="mt-4 pt-3 border-t border-borderSubtle flex flex-wrap items-center justify-between gap-2 text-[11px] text-gray-400">
+                    <div class="flex items-center gap-4">
+                        <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-sm bg-emerald-500/30 border border-emerald-500"></span> Kârlı Gün</span>
+                        <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-sm bg-rose-500/30 border border-rose-500"></span> Zararlı Gün</span>
+                        <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-sm bg-amber-500/30 border border-amber-500"></span> Başabaş (BE)</span>
+                    </div>
+                    <span>Detay görmek veya işlem eklemek için güne tıkla</span>
+                </div>
+            </div>
+
+            <!-- Sağ Kolon: Seçili Günün İşlemleri & Hızlı Ekleme -->
+            <div class="lg:col-span-4 bg-obsidian border border-borderSubtle rounded-2xl p-4 sm:p-5 flex flex-col justify-between">
+                <div>
+                    <div class="flex items-center justify-between gap-2 pb-3 border-b border-borderSubtle">
+                        <div>
+                            <span class="text-[11px] uppercase tracking-wider text-gray-400 font-semibold">Seçili Tarih</span>
+                            <h4 id="selectedDateHeading" class="text-base font-bold text-white font-mono mt-0.5">19 Kasım 2026</h4>
+                        </div>
+                        <button onclick="openTradeModal(selectedDateStr)" class="px-3 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-black font-semibold text-xs transition flex items-center gap-1">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path></svg>
+                            Bu Güne Ekle
+                        </button>
+                    </div>
+
+                    <!-- Günlük Özet Bandı -->
+                    <div id="daySummaryBox" class="mt-3 p-3 rounded-xl bg-surface border border-borderSubtle flex items-center justify-between">
+                        <div>
+                            <div class="text-[11px] text-gray-400">Günlük Net Sonuç</div>
+                            <div id="dayNetPnlText" class="text-base font-bold font-mono text-white">$0.00</div>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-[11px] text-gray-400">Toplam R / İşlem</div>
+                            <div id="dayNetRText" class="text-sm font-semibold font-mono text-gray-300">0.00R (0)</div>
+                        </div>
+                    </div>
+
+                    <!-- Seçili Günün İşlem Listesi -->
+                    <div id="dayTradesList" class="mt-4 space-y-2.5 max-h-[380px] overflow-y-auto pr-1">
+                        <!-- JS ile doldurulacak -->
+                    </div>
+                </div>
+
+                <!-- Alt Sabit Disiplin Hatırlatıcı Kartı -->
+                <div class="mt-5 p-3.5 rounded-xl bg-gradient-to-br from-surface to-obsidian border border-borderSubtle">
+                    <div class="flex items-center justify-between mb-1.5">
+                        <span class="text-[11px] font-semibold uppercase tracking-wider text-emerald-400 flex items-center gap-1.5">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
+                            Günün Disiplin Notu
+                        </span>
+                        <button onclick="rotateSidebarQuote()" class="text-[11px] text-gray-400 hover:text-white transition">Yenile ↻</button>
+                    </div>
+                    <p id="sidebarQuoteText" class="text-xs text-gray-300 leading-relaxed">
+                        "Piyasa her gün fırsat verir ama sermayen sadece bir tanedir. 1R - 2R disiplinine sadık kalırsan 2 ay sonra bileşik getiri senin yerine çalışır."
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- SEKME 2: GEÇMİŞ İŞLEMLER LİSTESİ -->
+        <div id="viewHistory" class="hidden bg-obsidian border border-borderSubtle rounded-2xl p-4 sm:p-5 space-y-4">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div>
+                    <h3 class="text-base font-bold text-white">Geçmiş Tüm İşlemler</h3>
+                    <p class="text-xs text-gray-400">Aktif hesaba ait tüm geçmiş işlemlerini parite ve sonuca göre filtreleyebilirsin.</p>
+                </div>
+
+                <!-- Filtreler -->
+                <div class="flex flex-wrap items-center gap-2">
+                    <select id="filterPair" onchange="renderHistoryTable()" class="bg-surface border border-borderSubtle rounded-xl px-3 py-2 text-xs text-gray-200 focus:outline-none focus:border-emerald-500">
+                        <option value="ALL">Tüm Pariteler</option>
+                        <option value="XAUUSD">XAUUSD</option>
+                        <option value="EURUSD">EURUSD</option>
+                        <option value="BTCUSDT.P">BTCUSDT.P</option>
+                        <option value="ETHUSDT.P">ETHUSDT.P</option>
+                        <option value="US100">US100</option>
+                    </select>
+
+                    <select id="filterOutcome" onchange="renderHistoryTable()" class="bg-surface border border-borderSubtle rounded-xl px-3 py-2 text-xs text-gray-200 focus:outline-none focus:border-emerald-500">
+                        <option value="ALL">Tüm Sonuçlar</option>
+                        <option value="WIN">Sadece Kazanç (Win)</option>
+                        <option value="LOSS">Sadece Kayıp (Loss)</option>
+                        <option value="BE">Başabaş (BE)</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- İşlem Tablosu -->
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="border-b border-borderSubtle text-[11px] font-semibold text-gray-400 uppercase tracking-wider">
+                            <th class="py-3 px-3">Tarih</th>
+                            <th class="py-3 px-3">Parite</th>
+                            <th class="py-3 px-3">Yön</th>
+                            <th class="py-3 px-3">Risk ($ / %)</th>
+                            <th class="py-3 px-3">Sonuç</th>
+                            <th class="py-3 px-3">Net PnL ($)</th>
+                            <th class="py-3 px-3">R Çarpanı</th>
+                            <th class="py-3 px-3">Setup / Not</th>
+                            <th class="py-3 px-3 text-right">İşlem</th>
+                        </tr>
+                    </thead>
+                    <tbody id="historyTableBody" class="divide-y divide-borderSubtle text-xs sm:text-sm">
+                        <!-- JS ile doldurulacak -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- MODAL 1: YENİ İŞLEM GİRİŞİ & CANLI RİSK / PSİKOLOJİ KORUYUCU -->
+    <div id="tradeModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/80 backdrop-blur-sm p-3 sm:p-4 overflow-y-auto">
+        <div class="bg-obsidian border border-borderSubtle rounded-2xl w-full max-w-2xl shadow-2xl overflow-hidden my-auto">
+            
+            <!-- Modal Üst Bar -->
+            <div class="px-5 py-4 bg-surface border-b border-borderSubtle flex items-center justify-between">
+                <div>
+                    <h3 class="text-base sm:text-lg font-bold text-white">Yeni İşlem Kaydı</h3>
+                    <p class="text-xs text-gray-400">Önce pariteni seç, riskini kontrol et ve disiplinine sadık kal.</p>
+                </div>
+                <button onclick="closeTradeModal()" class="p-2 rounded-xl bg-obsidian hover:bg-surfaceHover text-gray-400 hover:text-white transition">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+
+            <form id="tradeForm" onsubmit="handleSaveTrade(event)" class="p-5 space-y-5 max-h-[82vh] overflow-y-auto">
+                
+                <!-- ADIM 1: PARİTE SEÇİMİ -->
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-2">
+                        1. İşlem Alınan Pariteyi Seç
+                    </label>
+                    <div class="grid grid-cols-2 sm:grid-cols-5 gap-2" id="pairSelectorGrid">
+                        <button type="button" data-pair="XAUUSD" onclick="selectPair('XAUUSD')" class="pair-btn py-2.5 px-3 rounded-xl border text-xs font-bold font-mono transition flex flex-col items-center justify-center gap-0.5">
+                            <span>XAUUSD</span>
+                            <span class="text-[10px] font-sans font-normal opacity-70">Altın / Ons</span>
+                        </button>
+                        <button type="button" data-pair="EURUSD" onclick="selectPair('EURUSD')" class="pair-btn py-2.5 px-3 rounded-xl border text-xs font-bold font-mono transition flex flex-col items-center justify-center gap-0.5">
+                            <span>EURUSD</span>
+                            <span class="text-[10px] font-sans font-normal opacity-70">Majör FX</span>
+                        </button>
+                        <button type="button" data-pair="BTCUSDT.P" onclick="selectPair('BTCUSDT.P')" class="pair-btn py-2.5 px-3 rounded-xl border text-xs font-bold font-mono transition flex flex-col items-center justify-center gap-0.5">
+                            <span>BTCUSDT.P</span>
+                            <span class="text-[10px] font-sans font-normal opacity-70">Bitcoin Perp</span>
+                        </button>
+                        <button type="button" data-pair="ETHUSDT.P" onclick="selectPair('ETHUSDT.P')" class="pair-btn py-2.5 px-3 rounded-xl border text-xs font-bold font-mono transition flex flex-col items-center justify-center gap-0.5">
+                            <span>ETHUSDT.P</span>
+                            <span class="text-[10px] font-sans font-normal opacity-70">Ethereum Perp</span>
+                        </button>
+                        <button type="button" data-pair="US100" onclick="selectPair('US100')" class="pair-btn col-span-2 sm:col-span-1 py-2.5 px-3 rounded-xl border text-xs font-bold font-mono transition flex flex-col items-center justify-center gap-0.5">
+                            <span>US100</span>
+                            <span class="text-[10px] font-sans font-normal opacity-70">Nasdaq 100</span>
+                        </button>
+                    </div>
+                    <input type="hidden" id="inputPair" value="XAUUSD">
+                </div>
+
+                <!-- CANLI PSİKOLOJİK & RİSK DİSİPLİNİ HATIRLATICISI (DİNAMİK KUTU) -->
+                <div id="psychologyGuardBox" class="p-4 rounded-2xl border transition-all duration-300 bg-emerald-500/10 border-emerald-500/30">
+                    <div class="flex items-start justify-between gap-3">
+                        <div class="flex items-start gap-3">
+                            <div id="psychIcon" class="w-8 h-8 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0 mt-0.5 font-bold text-base">
+                                🛡️
+                            </div>
+                            <div>
+                                <div class="flex items-center gap-2">
+                                    <h4 id="psychTitle" class="text-xs sm:text-sm font-bold text-emerald-400">Disiplin & Risk Kontrolü Aktif</h4>
+                                    <span id="psychRiskBadge" class="px-2 py-0.5 rounded-md text-[10px] font-mono font-bold bg-emerald-500/20 text-emerald-300">%1.0 Risk</span>
+                                </div>
+                                <p id="psychMessage" class="text-xs text-gray-200 mt-1.5 leading-relaxed">
+                                    Şu an riskini kontrol altında tutuyorsun. 1R - 2R aralığında kalarak duygularını değil planını yönetirsen, 1-2 ay sonra çok daha güçlü bir bakiyeye ulaşacaksın.
+                                </p>
+                            </div>
+                        </div>
+                        <button type="button" onclick="cyclePsychMotivation()" class="shrink-0 px-2.5 py-1.5 rounded-lg bg-black/40 hover:bg-black/60 text-[11px] text-gray-300 border border-white/10 transition" title="Farklı bir hatırlatıcı cümle gör">
+                            Hatırlat ↻
+                        </button>
+                    </div>
+                </div>
+
+                <!-- ADIM 2: TARİH, YÖN VE SONUÇ DURUMU -->
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div>
+                        <label class="block text-xs font-medium text-gray-400 mb-1.5">İşlem Tarihi</label>
+                        <input type="date" id="inputDate" required onchange="evaluateDisciplineGuard()" class="w-full bg-surface border border-borderSubtle rounded-xl px-3 py-2.5 text-xs sm:text-sm font-mono text-white focus:outline-none focus:border-emerald-500">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-medium text-gray-400 mb-1.5">İşlem Yönü</label>
+                        <div class="grid grid-cols-2 gap-1.5 bg-surface p-1 rounded-xl border border-borderSubtle">
+                            <button type="button" id="btnDirLong" onclick="selectDirection('LONG')" class="py-1.5 rounded-lg text-xs font-bold transition bg-emerald-500 text-black">
+                                LONG ↑
+                            </button>
+                            <button type="button" id="btnDirShort" onclick="selectDirection('SHORT')" class="py-1.5 rounded-lg text-xs font-bold transition text-gray-400 hover:text-white">
+                                SHORT ↓
+                            </button>
+                        </div>
+                        <input type="hidden" id="inputDirection" value="LONG">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-medium text-gray-400 mb-1.5">İşlem Sonucu</label>
+                        <div class="grid grid-cols-3 gap-1 bg-surface p-1 rounded-xl border border-borderSubtle">
+                            <button type="button" id="btnOutWin" onclick="selectOutcome('WIN')" class="py-1.5 rounded-lg text-xs font-bold transition bg-emerald-500 text-black">
+                                Kazanç
+                            </button>
+                            <button type="button" id="btnOutLoss" onclick="selectOutcome('LOSS')" class="py-1.5 rounded-lg text-xs font-bold transition text-gray-400 hover:text-white">
+                                Kayıp
+                            </button>
+                            <button type="button" id="btnOutBe" onclick="selectOutcome('BE')" class="py-1.5 rounded-lg text-xs font-bold transition text-gray-400 hover:text-white">
+                                BE
+                            </button>
+                        </div>
+                        <input type="hidden" id="inputOutcome" value="WIN">
+                    </div>
+                </div>
+
+                <!-- ADIM 3: RİSK EDİLEN TUTAR VE KAZANÇ / KAYIP GİRDİLERİ -->
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-surface/60 p-3.5 rounded-2xl border border-borderSubtle">
+                    <div>
+                        <div class="flex items-center justify-between mb-1.5">
+                            <label class="text-xs font-medium text-gray-300">Risk Edilen ($)</label>
+                            <span id="calcRiskPctLabel" class="text-[11px] font-mono text-emerald-400">%1.00 Bakiye</span>
+                        </div>
+                        <input type="number" step="0.01" min="1" id="inputRiskAmount" value="100" required oninput="onRiskOrOutcomeChange()" class="w-full bg-obsidian border border-borderSubtle rounded-xl px-3 py-2 text-sm font-mono text-white focus:outline-none focus:border-emerald-500" placeholder="Örn: 100">
+                        <div class="flex gap-1.5 mt-1.5">
+                            <button type="button" onclick="setQuickRiskPct(0.5)" class="px-2 py-0.5 rounded bg-obsidian hover:bg-surfaceHover border border-borderSubtle text-[10px] font-mono text-gray-300">%0.5</button>
+                            <button type="button" onclick="setQuickRiskPct(1)" class="px-2 py-0.5 rounded bg-obsidian hover:bg-surfaceHover border border-borderSubtle text-[10px] font-mono text-emerald-400">%1 (1R)</button>
+                            <button type="button" onclick="setQuickRiskPct(2)" class="px-2 py-0.5 rounded bg-obsidian hover:bg-surfaceHover border border-borderSubtle text-[10px] font-mono text-amber-400">%2</button>
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class="flex items-center justify-between mb-1.5">
+                            <label id="pnlInputLabel" class="text-xs font-medium text-gray-300">Kazanılan Tutar ($)</label>
+                            <span class="text-[11px] text-gray-500">Net PnL</span>
+                        </div>
+                        <input type="number" step="0.01" min="0" id="inputPnlAmount" value="200" required oninput="onPnlManualChange()" class="w-full bg-obsidian border border-borderSubtle rounded-xl px-3 py-2 text-sm font-mono text-emerald-400 font-bold focus:outline-none focus:border-emerald-500" placeholder="Örn: 200">
+                        <div class="flex gap-1.5 mt-1.5">
+                            <button type="button" onclick="applyRMultiple(1)" class="px-2 py-0.5 rounded bg-obsidian hover:bg-surfaceHover border border-borderSubtle text-[10px] font-mono text-gray-300">1R</button>
+                            <button type="button" onclick="applyRMultiple(2)" class="px-2 py-0.5 rounded bg-obsidian hover:bg-surfaceHover border border-borderSubtle text-[10px] font-mono text-gray-300">2R</button>
+                            <button type="button" onclick="applyRMultiple(3)" class="px-2 py-0.5 rounded bg-obsidian hover:bg-surfaceHover border border-borderSubtle text-[10px] font-mono text-gray-300">3R</button>
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class="flex items-center justify-between mb-1.5">
+                            <label class="text-xs font-medium text-gray-300">Gerçekleşen R</label>
+                            <span class="text-[11px] text-gray-500">Otomatik</span>
+                        </div>
+                        <input type="text" id="inputRMultiple" readonly value="+2.00R" class="w-full bg-obsidian/70 border border-borderSubtle rounded-xl px-3 py-2 text-sm font-mono font-bold text-emerald-400 focus:outline-none">
+                        <p class="text-[10px] text-gray-400 mt-1.5">Net Kazanç / Risk edilen tutar</p>
+                    </div>
+                </div>
+
+                <!-- ADIM 4: SETUP / NOT -->
+                <div>
+                    <label class="block text-xs font-medium text-gray-400 mb-1.5">İşlem Notu / Setup (İsteğe Bağlı)</label>
+                    <input type="text" id="inputNote" placeholder="Örn: London Sweep + MSS + FVG girişi, plana tam sadık kalındı..." class="w-full bg-surface border border-borderSubtle rounded-xl px-3.5 py-2.5 text-xs sm:text-sm text-white placeholder-gray-500 focus:outline-none focus:border-emerald-500">
+                </div>
+
+                <!-- Kaydet Butonları -->
+                <div class="flex items-center justify-end gap-2.5 pt-2 border-t border-borderSubtle">
+                    <button type="button" onclick="closeTradeModal()" class="px-4 py-2.5 rounded-xl bg-surface hover:bg-surfaceHover text-xs font-semibold text-gray-300 transition">
+                        Vazgeç
+                    </button>
+                    <button type="submit" class="px-5 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-black text-xs sm:text-sm font-bold transition shadow-lg shadow-emerald-500/20">
+                        İşlemi Günlüğe Kaydet
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL 2: HESAP DÜZENLEME / YENİ HESAP EKLEME -->
+    <div id="accountModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+        <div class="bg-obsidian border border-borderSubtle rounded-2xl w-full max-w-md shadow-2xl overflow-hidden">
+            <div class="px-5 py-4 bg-surface border-b border-borderSubtle flex items-center justify-between">
+                <h3 id="accountModalTitle" class="text-base font-bold text-white">Hesap Ayarları</h3>
+                <button onclick="closeAccountModal()" class="p-1.5 rounded-lg text-gray-400 hover:text-white">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            <form onsubmit="handleSaveAccount(event)" class="p-5 space-y-4">
+                <div>
+                    <label class="block text-xs font-medium text-gray-400 mb-1.5">Hesap Adı (Manuel Değiştirilebilir)</label>
+                    <input type="text" id="inputAccountName" required placeholder="Örn: FTMO 100K, Kişisel Kripto, Scalping..." class="w-full bg-surface border border-borderSubtle rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-emerald-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-gray-400 mb-1.5">Başlangıç Bakiyesi ($)</label>
+                    <input type="number" step="1" min="10" id="inputAccountBalance" required placeholder="10000" class="w-full bg-surface border border-borderSubtle rounded-xl px-3.5 py-2.5 text-sm font-mono text-white focus:outline-none focus:border-emerald-500">
+                </div>
+                <div class="flex items-center justify-between pt-2">
+                    <button type="button" id="btnDeleteAccount" onclick="deleteCurrentAccount()" class="px-3 py-2 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 text-xs font-semibold transition">
+                        Hesabı Sil
+                    </button>
+                    <div class="flex items-center gap-2">
+                        <button type="button" onclick="closeAccountModal()" class="px-4 py-2 rounded-xl bg-surface text-xs font-semibold text-gray-300">İptal</button>
+                        <button type="submit" class="px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-black text-xs font-bold">Kaydet</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Bildirim Toast Kutusu (alert yerine) -->
+    <div id="toastContainer" class="fixed bottom-4 right-4 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+    <script>
+        // =========================================================================
+        // 1. DURUM YÖNETİMİ VE VARSAYILAN VERİLER
+        // =========================================================================
+        const STORAGE_KEY = 'trade_journal_pro_v1';
+        const PAIRS = ['XAUUSD', 'EURUSD', 'BTCUSDT.P', 'ETHUSDT.P', 'US100'];
+        const MONTHS_TR = [
+            'Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran',
+            'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'
+        ];
+
+        // Psikolojik ve motive edici hatırlatıcı havuzu
+        const POSITIVE_QUOTES = [
+            "Şu an riskini 1R - 2R seviyesinde tutarak duygularını değil sistemini yönetiyorsun. Bu disiplini korursan 1-2 ay sonra bileşik getiriyle çok daha güçlü bir bakiyeye ulaşacaksın.",
+            "Profesyonel trader tek bir işlemden zengin olmaya çalışmaz; 100 işlemlik seride istatistiğin çalışmasına izin verir. Planına sadık kal!",
+            "Riskini küçük tuttuğunda zihnin berrak kalır. Bugün sermayeni korumak, yarının en net setup'ına kurşun saklamaktır.",
+            "Harika disiplin! Kasa yönetimini bozmadığın her gün, amatörlerin elendiği piyasada bir adım daha öne geçiyorsun."
+        ];
+
+        const HIGH_RISK_WARNINGS = [
+            "⚠️ Dikkat: Şu an bu işlemde standart %2 risk sınırının üzerine çıkıyorsun! Geçmişte yüksek risk aldığın günlerde tek bir stop, haftalık emeğini sildi. Lotunu küçült!",
+            "🚨 Yüksek Risk Alarmı: Bu işlem ters giderse bakiyende ciddi bir hasar oluşacak. Hiçbir setup %100 garanti değildir; riskini 1R (%1) seviyesine çek!",
+            "⚠️ Duygusal Karar Uyarısı: Kazancını hızlandırmak için riski büyütmek genellikle en büyük kayıpların başlangıcıdır. Sabırlı ol, küçük adımlarla büyü."
+        ];
+
+        const OVERTRADE_WARNINGS = [
+            "🛑 Overtrade Alarmı: Seçili tarihte zaten birden fazla işlem aldın! Piyasadan intikam almaya veya kârı zorlamaya çalışma; masadan kalkmak da kâr etmektir.",
+            "🛑 Yorgun Zihin Uyarısı: Günlük işlem sayın artıyor. İşlem sayısı arttıkça kalite düşer, komisyon ve hata payı artar. Gerçekten A+ bir setup mı?",
+            "🛑 Dur ve Nefes Al: Bugün yeterince pozisyon açtın. En iyi trader'lar ekranı kapatmayı bilenlerdir. Yarın piyasa yine burada olacak."
+        ];
+
+        let state = {
+            accounts: [],
+            activeAccountId: null
+        };
+
+        // Takvim navigasyon durumu
+        const todayObj = new Date();
+        let currentYear = todayObj.getFullYear();
+        let currentMonth = todayObj.getMonth();
+        let selectedDateStr = formatDateISO(todayObj);
+        let accountModalMode = 'edit'; // 'edit' | 'create'
+        let manualQuoteOffset = 0;
+
+        // =========================================================================
+        // 2. BAŞLATMA VE LOCALSTORAGE
+        // =========================================================================
+        function initApp() {
+            const saved = localStorage.getItem(STORAGE_KEY);
+            if (saved) {
+                try {
+                    state = JSON.parse(saved);
+                } catch (e) {
+                    console.error('Veri okuma hatası:', e);
+                }
+            }
+
+            // İlk açılışta 3 ayrı hesap oluştur ve Account 1 içine örnek işlemler ekle
+            if (!state.accounts || state.accounts.length === 0) {
+                const y = todayObj.getFullYear();
+                const m = String(todayObj.getMonth() + 1).padStart(2, '0');
+                const d1 = `${y}-${m}-03`;
+                const d2 = `${y}-${m}-06`;
+                const d3 = `${y}-${m}-11`;
+                const d4 = `${y}-${m}-14`;
+                const d5 = `${y}-${m}-17`;
+
+                state.accounts = [
+                    {
+                        id: 'acc_1',
+                        name: 'Account 1',
+                        initialBalance: 10000,
+                        trades: [
+                            { id: 't1', date: d1, pair: 'XAUUSD', direction: 'LONG', riskAmount: 100, pnl: 240, rMultiple: 2.4, outcome: 'WIN', note: 'London likidite alımı + MSS' },
+                            { id: 't2', date: d2, pair: 'US100', direction: 'SHORT', riskAmount: 100, pnl: -100, rMultiple: -1.0, outcome: 'LOSS', note: 'NY açılış fakeout, 1R stop' },
+                            { id: 't3', date: d3, pair: 'BTCUSDT.P', direction: 'LONG', riskAmount: 100, pnl: 310, rMultiple: 3.1, outcome: 'WIN', note: '4H FVG onayı, trend yönü' },
+                            { id: 't4', date: d4, pair: 'EURUSD', direction: 'LONG', riskAmount: 100, pnl: 150, rMultiple: 1.5, outcome: 'WIN', note: 'Asya dip süpürmesi' },
+                            { id: 't5', date: d5, pair: 'ETHUSDT.P', direction: 'SHORT', riskAmount: 150, pnl: -150, rMultiple: -1.0, outcome: 'LOSS', note: 'Direnç reddi erken giriş' }
+                        ]
+                    },
+                    {
+                        id: 'acc_2',
+                        name: 'Account 2',
+                        initialBalance: 25000,
+                        trades: []
+                    },
+                    {
+                        id: 'acc_3',
+                        name: 'Account 3',
+                        initialBalance: 5000,
+                        trades: []
+                    }
+                ];
+                state.activeAccountId = 'acc_1';
+                saveState();
+            }
+
+            if (!state.activeAccountId && state.accounts.length > 0) {
+                state.activeAccountId = state.accounts[0].id;
+            }
+
+            renderAll();
+        }
+
+        function saveState() {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+        }
+
+        function getActiveAccount() {
+            return state.accounts.find(a => a.id === state.activeAccountId) || state.accounts[0];
+        }
+
+        function getAccountCurrentBalance(account) {
+            const totalPnl = account.trades.reduce((sum, t) => sum + Number(t.pnl || 0), 0);
+            return Number(account.initialBalance) + totalPnl;
+        }
+
+        // =========================================================================
+        // 3. ANA RENDER FONKSİYONLARI
+        // =========================================================================
+        function renderAll() {
+            renderAccountTabs();
+            renderKPIs();
+            renderCalendar();
+            renderDayDetailPanel();
+            renderHistoryTable();
+        }
+
+        function renderAccountTabs() {
+            const container = document.getElementById('accountTabsContainer');
+            container.innerHTML = '';
+
+            state.accounts.forEach(acc => {
+                const isActive = acc.id === state.activeAccountId;
+                const netPnl = acc.trades.reduce((s, t) => s + Number(t.pnl), 0);
+                const pnlColor = netPnl > 0 ? 'text-emerald-400' : (netPnl < 0 ? 'text-rose-400' : 'text-gray-400');
+
+                const btn = document.createElement('button');
+                btn.onclick = () => {
+                    state.activeAccountId = acc.id;
+                    saveState();
+                    renderAll();
+                };
+                btn.className = `shrink-0 px-3.5 py-2 rounded-xl border text-xs font-semibold transition flex items-center gap-2 ${
+                    isActive
+                        ? 'bg-surface border-emerald-500/60 text-white shadow-sm'
+                        : 'bg-obsidian/60 border-borderSubtle text-gray-400 hover:text-gray-200 hover:bg-surface/50'
+                }`;
+
+                btn.innerHTML = `
+                    <span class="w-2 h-2 rounded-full ${isActive ? 'bg-emerald-400' : 'bg-gray-600'}"></span>
+                    <span>${escapeHTML(acc.name)}</span>
+                    <span class="font-mono text-[11px] ${pnlColor}">${netPnl >= 0 ? '+' : ''}${formatCurrency(netPnl)}</span>
+                `;
+                container.appendChild(btn);
+            });
+
+            // Yeni hesap ekleme butonu
+            const addBtn = document.createElement('button');
+            addBtn.onclick = () => openNewAccountModal();
+            addBtn.className = 'shrink-0 px-3 py-2 rounded-xl border border-dashed border-borderSubtle hover:border-emerald-500/50 text-xs font-medium text-gray-400 hover:text-emerald-400 transition flex items-center gap-1';
+            addBtn.innerHTML = `<span>+ Yeni Hesap</span>`;
+            container.appendChild(addBtn);
+        }
+
+        function renderKPIs() {
+            const acc = getActiveAccount();
+            document.getElementById('activeAccountTitle').textContent = acc.name;
+
+            const startBal = Number(acc.initialBalance);
+            const netPnl = acc.trades.reduce((s, t) => s + Number(t.pnl), 0);
+            const currentBal = startBal + netPnl;
+            const growthPct = startBal > 0 ? (netPnl / startBal) * 100 : 0;
+
+            document.getElementById('kpiStartBalance').textContent = formatCurrency(startBal);
+            document.getElementById('kpiCurrentBalance').textContent = formatCurrency(currentBal);
+
+            const pnlEl = document.getElementById('kpiNetPnl');
+            pnlEl.textContent = `${netPnl >= 0 ? '+' : ''}${formatCurrency(netPnl)}`;
+            pnlEl.className = `mt-1.5 text-lg sm:text-xl font-bold font-mono tabular-nums ${
+                netPnl > 0 ? 'text-emerald-400' : (netPnl < 0 ? 'text-rose-400' : 'text-white')
+            }`;
+
+            const pctEl = document.getElementById('kpiNetPnlPct');
+            pctEl.textContent = `${growthPct >= 0 ? '+' : ''}%${growthPct.toFixed(2)} bakiye değişimi`;
+            pctEl.className = `text-[11px] font-mono mt-0.5 ${
+                growthPct > 0 ? 'text-emerald-400/80' : (growthPct < 0 ? 'text-rose-400/80' : 'text-gray-400')
+            }`;
+
+            // R hesaplamaları
+            const totalR = acc.trades.reduce((s, t) => s + Number(t.rMultiple), 0);
+            const avgR = acc.trades.length > 0 ? totalR / acc.trades.length : 0;
+            const netREl = document.getElementById('kpiNetR');
+            netREl.textContent = `${totalR >= 0 ? '+' : ''}${totalR.toFixed(2)}R`;
+            netREl.className = `mt-1.5 text-lg sm:text-xl font-bold font-mono tabular-nums ${
+                totalR > 0 ? 'text-emerald-400' : (totalR < 0 ? 'text-rose-400' : 'text-white')
+            }`;
+            document.getElementById('kpiAvgR').textContent = `Ort: ${avgR >= 0 ? '+' : ''}${avgR.toFixed(2)}R / işlem`;
+
+            // Win rate
+            const wins = acc.trades.filter(t => t.outcome === 'WIN').length;
+            const losses = acc.trades.filter(t => t.outcome === 'LOSS').length;
+            const bes = acc.trades.filter(t => t.outcome === 'BE').length;
+            const decisiveCount = wins + losses;
+            const winRate = decisiveCount > 0 ? (wins / decisiveCount) * 100 : 0;
+
+            document.getElementById('kpiWinRate').textContent = `%${winRate.toFixed(0)}`;
+            document.getElementById('kpiWinLossCount').textContent = `${wins}K / ${losses}Z / ${bes}B`;
+
+            // Toplam işlem & en çok işlem alınan parite
+            document.getElementById('kpiTotalTrades').textContent = acc.trades.length;
+            document.getElementById('historyBadgeCount').textContent = acc.trades.length;
+
+            if (acc.trades.length > 0) {
+                const pairCounts = {};
+                acc.trades.forEach(t => pairCounts[t.pair] = (pairCounts[t.pair] || 0) + 1);
+                const topPair = Object.entries(pairCounts).sort((a, b) => b[1] - a[1])[0];
+                document.getElementById('kpiTopPair').textContent = `En sık: ${topPair[0]} (${topPair[1]})`;
+            } else {
+                document.getElementById('kpiTopPair').textContent = 'Henüz işlem yok';
+            }
+
+            // Bugünkü disiplin kartı
+            const todayISO = formatDateISO(new Date());
+            const todayTrades = acc.trades.filter(t => t.date === todayISO);
+            const countEl = document.getElementById('kpiTodayCount');
+            const statusEl = document.getElementById('kpiTodayStatus');
+            const cardEl = document.getElementById('dailyDisciplineCard');
+
+            countEl.textContent = `${todayTrades.length} İşlem`;
+            if (todayTrades.length >= 3) {
+                countEl.className = 'mt-1.5 text-lg sm:text-xl font-bold font-mono tabular-nums text-rose-400';
+                statusEl.textContent = '⚠️ Overtrade sınırındasın!';
+                statusEl.className = 'text-[11px] text-rose-400 mt-0.5 font-medium';
+                cardEl.className = 'col-span-2 sm:col-span-1 bg-rose-500/10 border border-rose-500/40 rounded-2xl p-3.5';
+            } else if (todayTrades.length === 2) {
+                countEl.className = 'mt-1.5 text-lg sm:text-xl font-bold font-mono tabular-nums text-amber-400';
+                statusEl.textContent = 'Dikkatli ol, limit doluyor';
+                statusEl.className = 'text-[11px] text-amber-400 mt-0.5';
+                cardEl.className = 'col-span-2 sm:col-span-1 bg-surface border border-amber-500/40 rounded-2xl p-3.5';
+            } else {
+                countEl.className = 'mt-1.5 text-lg sm:text-xl font-bold font-mono tabular-nums text-emerald-400';
+                statusEl.textContent = 'Zihin berrak, limit ideal';
+                statusEl.className = 'text-[11px] text-emerald-400/90 mt-0.5';
+                cardEl.className = 'col-span-2 sm:col-span-1 bg-surface border border-borderSubtle rounded-2xl p-3.5';
+            }
+        }
+
+        // =========================================================================
+        // 4. AYLIK TAKVİM OLUŞTURMA
+        // =========================================================================
+        function renderCalendar() {
+            const acc = getActiveAccount();
+            document.getElementById('calendarMonthLabel').textContent = `${MONTHS_TR[currentMonth]} ${currentYear}`;
+
+            const grid = document.getElementById('calendarGrid');
+            grid.innerHTML = '';
+
+            // Ayın ilk günü (Pazartesi = 0 ... Pazar = 6 olacak şekilde ayarla)
+            const firstDayOfMonth = new Date(currentYear, currentMonth, 1).getDay();
+            const startOffset = (firstDayOfMonth === 0) ? 6 : firstDayOfMonth - 1;
+            const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+
+            // Bu aydaki işlemleri gün bazında grupla
+            const monthPrefix = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}`;
+            let monthNetPnl = 0;
+
+            const tradesByDate = {};
+            acc.trades.forEach(t => {
+                if (t.date.startsWith(monthPrefix)) {
+                    monthNetPnl += Number(t.pnl);
+                }
+                if (!tradesByDate[t.date]) tradesByDate[t.date] = [];
+                tradesByDate[t.date].push(t);
+            });
+
+            const monthPill = document.getElementById('monthSummaryPill');
+            monthPill.textContent = `Ay Net: ${monthNetPnl >= 0 ? '+' : ''}${formatCurrency(monthNetPnl)}`;
+            monthPill.className = `px-2.5 py-1 rounded-lg border text-xs font-mono font-semibold ${
+                monthNetPnl > 0
+                    ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
+                    : monthNetPnl < 0
+                        ? 'bg-rose-500/10 border-rose-500/30 text-rose-400'
+                        : 'bg-surface border-borderSubtle text-gray-300'
+            }`;
+
+            // Boş hücreler (önceki aydan sarkan)
+            for (let i = 0; i < startOffset; i++) {
+                const emptyCell = document.createElement('div');
+                emptyCell.className = 'min-h-[68px] sm:min-h-[84px] rounded-xl bg-void/40 border border-borderSubtle/40';
+                grid.appendChild(emptyCell);
+            }
+
+            const todayISO = formatDateISO(new Date());
+
+            // Ayın günleri
+            for (let day = 1; day <= daysInMonth; day++) {
+                const dateStr = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                const dayTrades = tradesByDate[dateStr] || [];
+                const isSelected = dateStr === selectedDateStr;
+                const isToday = dateStr === todayISO;
+
+                let cellStyle = 'bg-surface/60 hover:bg-surface border-borderSubtle text-gray-300';
+                let pnlBadge = '';
+
+                if (dayTrades.length > 0) {
+                    const dayPnl = dayTrades.reduce((s, t) => s + Number(t.pnl), 0);
+                    const dayR = dayTrades.reduce((s, t) => s + Number(t.rMultiple), 0);
+
+                    if (dayPnl > 0) {
+                        cellStyle = 'bg-emerald-500/15 hover:bg-emerald-500/25 border-emerald-500/50 text-white';
+                        pnlBadge = `
+                            <div class="mt-auto">
+                                <div class="text-[11px] sm:text-xs font-bold font-mono text-emerald-400 truncate">+${formatCompactCurrency(dayPnl)}</div>
+                                <div class="text-[10px] font-mono text-emerald-300/80 hidden sm:block">+${dayR.toFixed(1)}R • ${dayTrades.length} işl</div>
+                            </div>
+                        `;
+                    } else if (dayPnl < 0) {
+                        cellStyle = 'bg-rose-500/15 hover:bg-rose-500/25 border-rose-500/50 text-white';
+                        pnlBadge = `
+                            <div class="mt-auto">
+                                <div class="text-[11px] sm:text-xs font-bold font-mono text-rose-400 truncate">${formatCompactCurrency(dayPnl)}</div>
+                                <div class="text-[10px] font-mono text-rose-300/80 hidden sm:block">${dayR.toFixed(1)}R • ${dayTrades.length} işl</div>
+                            </div>
+                        `;
+                    } else {
+                        cellStyle = 'bg-amber-500/15 hover:bg-amber-500/25 border-amber-500/50 text-white';
+                        pnlBadge = `
+                            <div class="mt-auto">
+                                <div class="text-[11px] sm:text-xs font-bold font-mono text-amber-400">$0 (BE)</div>
+                                <div class="text-[10px] font-mono text-amber-300/80 hidden sm:block">${dayTrades.length} işl</div>
+                            </div>
+                        `;
+                    }
+                }
+
+                const cell = document.createElement('button');
+                cell.type = 'button';
+                cell.onclick = () => {
+                    selectedDateStr = dateStr;
+                    renderCalendar();
+                    renderDayDetailPanel();
+                };
+
+                cell.className = `min-h-[68px] sm:min-h-[84px] p-1.5 sm:p-2 rounded-xl border text-left flex flex-col justify-between transition relative ${cellStyle} ${
+                    isSelected ? 'ring-2 ring-white ring-offset-1 ring-offset-black' : ''
+                }`;
+
+                cell.innerHTML = `
+                    <div class="flex items-center justify-between w-full">
+                        <span class="text-xs font-mono font-semibold ${isToday ? 'px-1.5 py-0.5 rounded-md bg-white text-black font-bold' : ''}">${day}</span>
+                        ${dayTrades.length > 0 ? `<span class="sm:hidden text-[9px] font-mono px-1 rounded bg-black/40">${dayTrades.length}</span>` : ''}
+                    </div>
+                    ${pnlBadge}
+                `;
+                grid.appendChild(cell);
+            }
+        }
+
+        function changeMonth(delta) {
+            currentMonth += delta;
+            if (currentMonth > 11) {
+                currentMonth = 0;
+                currentYear++;
+            } else if (currentMonth < 0) {
+                currentMonth = 11;
+                currentYear--;
+            }
+            renderCalendar();
+        }
+
+        function goToToday() {
+            const now = new Date();
+            currentYear = now.getFullYear();
+            currentMonth = now.getMonth();
+            selectedDateStr = formatDateISO(now);
+            renderCalendar();
+            renderDayDetailPanel();
+        }
+
+        // =========================================================================
+        // 5. SEÇİLİ GÜN DETAY PANELİ
+        // =========================================================================
+        function renderDayDetailPanel() {
+            const acc = getActiveAccount();
+            document.getElementById('selectedDateHeading').textContent = formatTurkishDate(selectedDateStr);
+
+            const dayTrades = acc.trades.filter(t => t.date === selectedDateStr);
+            const dayPnl = dayTrades.reduce((s, t) => s + Number(t.pnl), 0);
+            const dayR = dayTrades.reduce((s, t) => s + Number(t.rMultiple), 0);
+
+            const pnlTextEl = document.getElementById('dayNetPnlText');
+            pnlTextEl.textContent = `${dayPnl >= 0 ? '+' : ''}${formatCurrency(dayPnl)}`;
+            pnlTextEl.className = `text-base font-bold font-mono ${
+                dayPnl > 0 ? 'text-emerald-400' : (dayPnl < 0 ? 'text-rose-400' : 'text-white')
+            }`;
+
+            document.getElementById('dayNetRText').textContent = `${dayR >= 0 ? '+' : ''}${dayR.toFixed(2)}R (${dayTrades.length} işlem)`;
+
+            const listContainer = document.getElementById('dayTradesList');
+            listContainer.innerHTML = '';
+
+            if (dayTrades.length === 0) {
+                listContainer.innerHTML = `
+                    <div class="py-8 px-4 text-center rounded-xl border border-dashed border-borderSubtle bg-surface/30">
+                        <p class="text-xs text-gray-400">Bu tarihte kayıtlı işlem bulunmuyor.</p>
+                        <button onclick="openTradeModal('${selectedDateStr}')" class="mt-2.5 text-xs font-semibold text-emerald-400 hover:underline">
+                            + Bu güne ilk işlemini ekle
+                        </button>
+                    </div>
+                `;
+                return;
+            }
+
+            dayTrades.forEach(t => {
+                const isWin = t.outcome === 'WIN';
+                const isLoss = t.outcome === 'LOSS';
+                const badgeClass = isWin
+                    ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30'
+                    : isLoss
+                        ? 'bg-rose-500/15 text-rose-400 border-rose-500/30'
+                        : 'bg-amber-500/15 text-amber-400 border-amber-500/30';
+
+                const item = document.createElement('div');
+                item.className = 'p-3 rounded-xl bg-surface border border-borderSubtle hover:border-gray-600 transition space-y-2';
+                item.innerHTML = `
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <span class="font-mono font-bold text-xs text-white">${escapeHTML(t.pair)}</span>
+                            <span class="px-1.5 py-0.5 rounded text-[10px] font-bold ${t.direction === 'LONG' ? 'bg-emerald-500/20 text-emerald-300' : 'bg-rose-500/20 text-rose-300'}">
+                                ${t.direction}
+                            </span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="px-2 py-0.5 rounded-md border text-xs font-mono font-bold ${badgeClass}">
+                                ${t.pnl >= 0 ? '+' : ''}${formatCurrency(t.pnl)} (${t.rMultiple >= 0 ? '+' : ''}${Number(t.rMultiple).toFixed(2)}R)
+                            </span>
+                            <button onclick="deleteTrade('${t.id}')" class="text-gray-500 hover:text-rose-400 transition p-1" title="İşlemi Sil">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-between text-[11px] text-gray-400 font-mono">
+                        <span>Risk: ${formatCurrency(t.riskAmount)}</span>
+                        <span>${t.outcome === 'WIN' ? 'Kazanç' : (t.outcome === 'LOSS' ? 'Kayıp' : 'Başabaş')}</span>
+                    </div>
+                    ${t.note ? `<p class="text-xs text-gray-300 bg-obsidian/70 px-2.5 py-1.5 rounded-lg border border-borderSubtle/60">${escapeHTML(t.note)}</p>` : ''}
+                `;
+                listContainer.appendChild(item);
+            });
+        }
+
+        function rotateSidebarQuote() {
+            manualQuoteOffset = (manualQuoteOffset + 1) % POSITIVE_QUOTES.length;
+            document.getElementById('sidebarQuoteText').textContent = `"${POSITIVE_QUOTES[manualQuoteOffset]}"`;
+        }
+
+        // =========================================================================
+        // 6. GEÇMİŞ İŞLEMLER TABLOSU VE FİLTRELEME
+        // =========================================================================
+        function switchMainTab(tab) {
+            const calView = document.getElementById('viewCalendar');
+            const histView = document.getElementById('viewHistory');
+            const btnCal = document.getElementById('tabBtnCalendar');
+            const btnHist = document.getElementById('tabBtnHistory');
+
+            if (tab === 'calendar') {
+                calView.classList.remove('hidden');
+                histView.classList.add('hidden');
+                btnCal.className = 'px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-surface text-white border border-borderSubtle transition';
+                btnHist.className = 'px-3.5 py-2 rounded-xl text-xs sm:text-sm font-medium text-gray-400 hover:text-white transition';
+            } else {
+                calView.classList.add('hidden');
+                histView.classList.remove('hidden');
+                btnHist.className = 'px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-surface text-white border border-borderSubtle transition';
+                btnCal.className = 'px-3.5 py-2 rounded-xl text-xs sm:text-sm font-medium text-gray-400 hover:text-white transition';
+                renderHistoryTable();
+            }
+        }
+
+        function renderHistoryTable() {
+            const acc = getActiveAccount();
+            const pairFilter = document.getElementById('filterPair').value;
+            const outcomeFilter = document.getElementById('filterOutcome').value;
+
+            let filtered = [...acc.trades].sort((a, b) => b.date.localeCompare(a.date));
+
+            if (pairFilter !== 'ALL') {
+                filtered = filtered.filter(t => t.pair === pairFilter);
+            }
+            if (outcomeFilter !== 'ALL') {
+                filtered = filtered.filter(t => t.outcome === outcomeFilter);
+            }
+
+            const tbody = document.getElementById('historyTableBody');
+            tbody.innerHTML = '';
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="9" class="py-10 text-center text-xs text-gray-400">
+                            Seçili kriterlere uygun geçmiş işlem kaydı bulunamadı.
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            filtered.forEach(t => {
+                const riskPct = acc.initialBalance > 0 ? (t.riskAmount / acc.initialBalance) * 100 : 0;
+                const pnlColor = t.pnl > 0 ? 'text-emerald-400' : (t.pnl < 0 ? 'text-rose-400' : 'text-amber-400');
+                const outcomeLabel = t.outcome === 'WIN'
+                    ? '<span class="px-2 py-0.5 rounded-md bg-emerald-500/15 text-emerald-400 text-[11px] font-semibold">Kazanç</span>'
+                    : t.outcome === 'LOSS'
+                        ? '<span class="px-2 py-0.5 rounded-md bg-rose-500/15 text-rose-400 text-[11px] font-semibold">Kayıp</span>'
+                        : '<span class="px-2 py-0.5 rounded-md bg-amber-500/15 text-amber-400 text-[11px] font-semibold">Başabaş</span>';
+
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-surface/50 transition';
+                tr.innerHTML = `
+                    <td class="py-3 px-3 font-mono text-xs text-gray-300 whitespace-nowrap">${t.date}</td>
+                    <td class="py-3 px-3 font-mono font-bold text-white whitespace-nowrap">${escapeHTML(t.pair)}</td>
+                    <td class="py-3 px-3 whitespace-nowrap">
+                        <span class="text-[11px] font-bold ${t.direction === 'LONG' ? 'text-emerald-400' : 'text-rose-400'}">${t.direction}</span>
+                    </td>
+                    <td class="py-3 px-3 font-mono text-xs text-gray-300 whitespace-nowrap">${formatCurrency(t.riskAmount)} <span class="text-gray-500">(%${riskPct.toFixed(1)})</span></td>
+                    <td class="py-3 px-3 whitespace-nowrap">${outcomeLabel}</td>
+                    <td class="py-3 px-3 font-mono font-bold ${pnlColor} whitespace-nowrap">${t.pnl >= 0 ? '+' : ''}${formatCurrency(t.pnl)}</td>
+                    <td class="py-3 px-3 font-mono font-semibold ${pnlColor} whitespace-nowrap">${t.rMultiple >= 0 ? '+' : ''}${Number(t.rMultiple).toFixed(2)}R</td>
+                    <td class="py-3 px-3 text-xs text-gray-400 max-w-xs truncate" title="${escapeHTML(t.note || '')}">${escapeHTML(t.note || '—')}</td>
+                    <td class="py-3 px-3 text-right whitespace-nowrap">
+                        <button onclick="deleteTrade('${t.id}')" class="px-2 py-1 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 text-xs transition">Sil</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // =========================================================================
+        // 7. İŞLEM EKLEME MODALI VE CANLI PSİKOLOJİK RİSK KORUYUCU
+        // =========================================================================
+        function openTradeModal(presetDate = null) {
+            const modal = document.getElementById('tradeModal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+
+            const targetDate = presetDate || selectedDateStr || formatDateISO(new Date());
+            document.getElementById('inputDate').value = targetDate;
+
+            // Varsayılan %1 risk hesapla
+            const acc = getActiveAccount();
+            const currentBal = getAccountCurrentBalance(acc);
+            const defaultRisk = Math.max(10, Math.round(currentBal * 0.01));
+            document.getElementById('inputRiskAmount').value = defaultRisk;
+            document.getElementById('inputNote').value = '';
+
+            selectPair('XAUUSD');
+            selectDirection('LONG');
+            selectOutcome('WIN');
+            applyRMultiple(2);
+            evaluateDisciplineGuard();
+        }
+
+        function closeTradeModal() {
+            const modal = document.getElementById('tradeModal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        function selectPair(pair) {
+            document.getElementById('inputPair').value = pair;
+            document.querySelectorAll('.pair-btn').forEach(btn => {
+                const isSelected = btn.getAttribute('data-pair') === pair;
+                if (isSelected) {
+                    btn.className = 'pair-btn py-2.5 px-3 rounded-xl border border-emerald-500 bg-emerald-500/15 text-emerald-300 text-xs font-bold font-mono transition flex flex-col items-center justify-center gap-0.5 shadow-sm shadow-emerald-500/10';
+                } else {
+                    btn.className = 'pair-btn py-2.5 px-3 rounded-xl border border-borderSubtle bg-surface hover:bg-surfaceHover text-gray-300 text-xs font-bold font-mono transition flex flex-col items-center justify-center gap-0.5';
+                }
+            });
+            evaluateDisciplineGuard();
+        }
+
+        function selectDirection(dir) {
+            document.getElementById('inputDirection').value = dir;
+            const btnL = document.getElementById('btnDirLong');
+            const btnS = document.getElementById('btnDirShort');
+            if (dir === 'LONG') {
+                btnL.className = 'py-1.5 rounded-lg text-xs font-bold transition bg-emerald-500 text-black';
+                btnS.className = 'py-1.5 rounded-lg text-xs font-bold transition text-gray-400 hover:text-white';
+            } else {
+                btnS.className = 'py-1.5 rounded-lg text-xs font-bold transition bg-rose-500 text-white';
+                btnL.className = 'py-1.5 rounded-lg text-xs font-bold transition text-gray-400 hover:text-white';
+            }
+        }
+
+        function selectOutcome(outcome) {
+            document.getElementById('inputOutcome').value = outcome;
+            const btnW = document.getElementById('btnOutWin');
+            const btnL = document.getElementById('btnOutLoss');
+            const btnB = document.getElementById('btnOutBe');
+
+            btnW.className = 'py-1.5 rounded-lg text-xs font-bold transition text-gray-400 hover:text-white';
+            btnL.className = 'py-1.5 rounded-lg text-xs font-bold transition text-gray-400 hover:text-white';
+            btnB.className = 'py-1.5 rounded-lg text-xs font-bold transition text-gray-400 hover:text-white';
+
+            const pnlInput = document.getElementById('inputPnlAmount');
+            const pnlLabel = document.getElementById('pnlInputLabel');
+            const riskVal = parseFloat(document.getElementById('inputRiskAmount').value) || 0;
+
+            if (outcome === 'WIN') {
+                btnW.className = 'py-1.5 rounded-lg text-xs font-bold transition bg-emerald-500 text-black';
+                pnlLabel.textContent = 'Kazanılan Tutar ($)';
+                pnlInput.className = 'w-full bg-obsidian border border-borderSubtle rounded-xl px-3 py-2 text-sm font-mono text-emerald-400 font-bold focus:outline-none focus:border-emerald-500';
+                if (parseFloat(pnlInput.value) === 0) pnlInput.value = (riskVal * 2).toFixed(0);
+            } else if (outcome === 'LOSS') {
+                btnL.className = 'py-1.5 rounded-lg text-xs font-bold transition bg-rose-500 text-white';
+                pnlLabel.textContent = 'Kaybedilen Tutar ($)';
+                pnlInput.className = 'w-full bg-obsidian border border-borderSubtle rounded-xl px-3 py-2 text-sm font-mono text-rose-400 font-bold focus:outline-none focus:border-rose-500';
+                pnlInput.value = riskVal;
+            } else {
+                btnB.className = 'py-1.5 rounded-lg text-xs font-bold transition bg-amber-500 text-black';
+                pnlLabel.textContent = 'Başabaş Tutarı ($)';
+                pnlInput.className = 'w-full bg-obsidian border border-borderSubtle rounded-xl px-3 py-2 text-sm font-mono text-amber-400 font-bold focus:outline-none focus:border-amber-500';
+                pnlInput.value = 0;
+            }
+            recalculateR();
+        }
+
+        function setQuickRiskPct(pct) {
+            const acc = getActiveAccount();
+            const bal = getAccountCurrentBalance(acc);
+            const amount = Math.max(1, Math.round((bal * pct) / 100));
+            document.getElementById('inputRiskAmount').value = amount;
+            onRiskOrOutcomeChange();
+        }
+
+        function applyRMultiple(r) {
+            const riskVal = parseFloat(document.getElementById('inputRiskAmount').value) || 0;
+            const outcome = document.getElementById('inputOutcome').value;
+            if (outcome === 'WIN') {
+                document.getElementById('inputPnlAmount').value = (riskVal * r).toFixed(2);
+            } else if (outcome === 'LOSS') {
+                document.getElementById('inputPnlAmount').value = riskVal.toFixed(2);
+            } else {
+                document.getElementById('inputPnlAmount').value = 0;
+            }
+            recalculateR();
+        }
+
+        function onRiskOrOutcomeChange() {
+            const outcome = document.getElementById('inputOutcome').value;
+            const riskVal = parseFloat(document.getElementById('inputRiskAmount').value) || 0;
+            if (outcome === 'LOSS') {
+                document.getElementById('inputPnlAmount').value = riskVal;
+            }
+            recalculateR();
+            evaluateDisciplineGuard();
+        }
+
+        function onPnlManualChange() {
+            recalculateR();
+            evaluateDisciplineGuard();
+        }
+
+        function recalculateR() {
+            const riskVal = parseFloat(document.getElementById('inputRiskAmount').value) || 0;
+            const rawPnl = Math.abs(parseFloat(document.getElementById('inputPnlAmount').value) || 0);
+            const outcome = document.getElementById('inputOutcome').value;
+            const rInput = document.getElementById('inputRMultiple');
+
+            if (riskVal <= 0) {
+                rInput.value = '0.00R';
+                return;
+            }
+
+            if (outcome === 'WIN') {
+                const r = rawPnl / riskVal;
+                rInput.value = `+${r.toFixed(2)}R`;
+                rInput.className = 'w-full bg-obsidian/70 border border-borderSubtle rounded-xl px-3 py-2 text-sm font-mono font-bold text-emerald-400 focus:outline-none';
+            } else if (outcome === 'LOSS') {
+                const r = rawPnl / riskVal;
+                rInput.value = `-${r.toFixed(2)}R`;
+                rInput.className = 'w-full bg-obsidian/70 border border-borderSubtle rounded-xl px-3 py-2 text-sm font-mono font-bold text-rose-400 focus:outline-none';
+            } else {
+                rInput.value = '0.00R';
+                rInput.className = 'w-full bg-obsidian/70 border border-borderSubtle rounded-xl px-3 py-2 text-sm font-mono font-bold text-amber-400 focus:outline-none';
+            }
+        }
+
+        // Canlı Psikolojik & Risk Koruyucu Değerlendirmesi
+        let psychQuoteIndex = 0;
+
+        function cyclePsychMotivation() {
+            psychQuoteIndex++;
+            evaluateDisciplineGuard();
+        }
+
+        function evaluateDisciplineGuard() {
+            const acc = getActiveAccount();
+            const currentBal = getAccountCurrentBalance(acc);
+            const riskVal = parseFloat(document.getElementById('inputRiskAmount').value) || 0;
+            const inputDate = document.getElementById('inputDate').value;
+
+            const riskPct = currentBal > 0 ? (riskVal / currentBal) * 100 : 0;
+            document.getElementById('calcRiskPctLabel').textContent = `%${riskPct.toFixed(2)} Bakiye`;
+
+            // Seçili günde zaten kaç işlem alınmış?
+            const tradesOnSelectedDay = acc.trades.filter(t => t.date === inputDate);
+            const sameDayLosses = tradesOnSelectedDay.filter(t => t.outcome === 'LOSS').length;
+
+            const box = document.getElementById('psychologyGuardBox');
+            const icon = document.getElementById('psychIcon');
+            const title = document.getElementById('psychTitle');
+            const badge = document.getElementById('psychRiskBadge');
+            const msg = document.getElementById('psychMessage');
+
+            badge.textContent = `%${riskPct.toFixed(1)} Risk (${tradesOnSelectedDay.length + 1}. işlem)`;
+
+            // Öncelik 1: Aşırı Risk (> %2.2)
+            if (riskPct > 2.2) {
+                box.className = 'p-4 rounded-2xl border transition-all duration-300 bg-rose-500/15 border-rose-500/50 animate-pulse-subtle';
+                icon.className = 'w-8 h-8 rounded-xl bg-rose-500/25 text-rose-400 flex items-center justify-center shrink-0 mt-0.5 font-bold text-base';
+                icon.textContent = '⚠️';
+                title.className = 'text-xs sm:text-sm font-bold text-rose-400';
+                title.textContent = 'Yüksek Risk Uyarısı! Kasa Yönetimi Tehlikede';
+                badge.className = 'px-2 py-0.5 rounded-md text-[10px] font-mono font-bold bg-rose-500/25 text-rose-300';
+                msg.textContent = HIGH_RISK_WARNINGS[psychQuoteIndex % HIGH_RISK_WARNINGS.length];
+            }
+            // Öncelik 2: Overtrade veya Aynı Gün Ardışık Kayıp
+            else if (tradesOnSelectedDay.length >= 2 || sameDayLosses >= 2) {
+                box.className = 'p-4 rounded-2xl border transition-all duration-300 bg-amber-500/15 border-amber-500/50';
+                icon.className = 'w-8 h-8 rounded-xl bg-amber-500/25 text-amber-400 flex items-center justify-center shrink-0 mt-0.5 font-bold text-base';
+                icon.textContent = '🛑';
+                title.className = 'text-xs sm:text-sm font-bold text-amber-400';
+                title.textContent = `Overtrade Kontrolü: Bugün ${tradesOnSelectedDay.length} İşlem Aldın`;
+                badge.className = 'px-2 py-0.5 rounded-md text-[10px] font-mono font-bold bg-amber-500/25 text-amber-300';
+                msg.textContent = OVERTRADE_WARNINGS[psychQuoteIndex % OVERTRADE_WARNINGS.length];
+            }
+            // Öncelik 3: Sağlıklı Disiplin (1R - 2R aralığı ve düşük işlem sayısı)
+            else {
+                box.className = 'p-4 rounded-2xl border transition-all duration-300 bg-emerald-500/10 border-emerald-500/35';
+                icon.className = 'w-8 h-8 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0 mt-0.5 font-bold text-base';
+                icon.textContent = '🛡️';
+                title.className = 'text-xs sm:text-sm font-bold text-emerald-400';
+                title.textContent = 'Harika Risk Disiplini — Planına Sadıksın';
+                badge.className = 'px-2 py-0.5 rounded-md text-[10px] font-mono font-bold bg-emerald-500/20 text-emerald-300';
+                msg.textContent = POSITIVE_QUOTES[psychQuoteIndex % POSITIVE_QUOTES.length];
+            }
+        }
+
+        function handleSaveTrade(e) {
+            e.preventDefault();
+            const acc = getActiveAccount();
+
+            const pair = document.getElementById('inputPair').value;
+            const date = document.getElementById('inputDate').value;
+            const direction = document.getElementById('inputDirection').value;
+            const outcome = document.getElementById('inputOutcome').value;
+            const riskAmount = Math.max(0.01, parseFloat(document.getElementById('inputRiskAmount').value) || 0);
+            const rawPnl = Math.abs(parseFloat(document.getElementById('inputPnlAmount').value) || 0);
+            const note = document.getElementById('inputNote').value.trim();
+
+            let signedPnl = 0;
+            if (outcome === 'WIN') signedPnl = rawPnl;
+            else if (outcome === 'LOSS') signedPnl = -rawPnl;
+            else signedPnl = 0;
+
+            const rMultiple = riskAmount > 0 ? signedPnl / riskAmount : 0;
+
+            const newTrade = {
+                id: 'tr_' + Date.now(),
+                date,
+                pair,
+                direction,
+                riskAmount,
+                pnl: signedPnl,
+                rMultiple,
+                outcome,
+                note
+            };
+
+            acc.trades.push(newTrade);
+            selectedDateStr = date;
+
+            // Takvimi kaydedilen işlemin ayına odakla
+            const [yStr, mStr] = date.split('-');
+            currentYear = parseInt(yStr, 10);
+            currentMonth = parseInt(mStr, 10) - 1;
+
+            saveState();
+            closeTradeModal();
+            renderAll();
+            showToast(`${pair} (${direction}) işlemi günlüğe kaydedildi.`, 'success');
+        }
+
+        function deleteTrade(tradeId) {
+            const acc = getActiveAccount();
+            acc.trades = acc.trades.filter(t => t.id !== tradeId);
+            saveState();
+            renderAll();
+            showToast('İşlem kaydı silindi.', 'info');
+        }
+
+        // =========================================================================
+        // 8. HESAP YÖNETİMİ (İSİM DEĞİŞTİRME / YENİ HESAP / SİLME)
+        // =========================================================================
+        function openAccountSettingsModal() {
+            accountModalMode = 'edit';
+            const acc = getActiveAccount();
+            document.getElementById('accountModalTitle').textContent = 'Hesap İsmini & Bakiyesini Düzenle';
+            document.getElementById('inputAccountName').value = acc.name;
+            document.getElementById('inputAccountBalance').value = acc.initialBalance;
+
+            const delBtn = document.getElementById('btnDeleteAccount');
+            if (state.accounts.length > 1) {
+                delBtn.classList.remove('hidden');
+            } else {
+                delBtn.classList.add('hidden');
+            }
+
+            const modal = document.getElementById('accountModal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function openNewAccountModal() {
+            accountModalMode = 'create';
+            document.getElementById('accountModalTitle').textContent = 'Yeni Hesap Oluştur';
+            document.getElementById('inputAccountName').value = `Account ${state.accounts.length + 1}`;
+            document.getElementById('inputAccountBalance').value = 10000;
+            document.getElementById('btnDeleteAccount').classList.add('hidden');
+
+            const modal = document.getElementById('accountModal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeAccountModal() {
+            const modal = document.getElementById('accountModal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        function handleSaveAccount(e) {
+            e.preventDefault();
+            const name = document.getElementById('inputAccountName').value.trim();
+            const balance = Math.max(10, parseFloat(document.getElementById('inputAccountBalance').value) || 10000);
+
+            if (!name) return;
+
+            if (accountModalMode === 'edit') {
+                const acc = getActiveAccount();
+                acc.name = name;
+                acc.initialBalance = balance;
+                showToast(`Hesap "${name}" olarak güncellendi.`, 'success');
+            } else {
+                const newAcc = {
+                    id: 'acc_' + Date.now(),
+                    name,
+                    initialBalance: balance,
+                    trades: []
+                };
+                state.accounts.push(newAcc);
+                state.activeAccountId = newAcc.id;
+                showToast(`"${name}" hesabı oluşturuldu.`, 'success');
+            }
+
+            saveState();
+            closeAccountModal();
+            renderAll();
+        }
+
+        function deleteCurrentAccount() {
+            if (state.accounts.length <= 1) return;
+            const acc = getActiveAccount();
+            state.accounts = state.accounts.filter(a => a.id !== acc.id);
+            state.activeAccountId = state.accounts[0].id;
+            saveState();
+            closeAccountModal();
+            renderAll();
+            showToast(`"${acc.name}" hesabı kaldırıldı.`, 'info');
+        }
+
+        // =========================================================================
+        // 9. YARDIMCI FONKSİYONLAR
+        // =========================================================================
+        function formatDateISO(dateObj) {
+            const y = dateObj.getFullYear();
+            const m = String(dateObj.getMonth() + 1).padStart(2, '0');
+            const d = String(dateObj.getDate()).padStart(2, '0');
+            return `${y}-${m}-${d}`;
+        }
+
+        function formatTurkishDate(isoStr) {
+            const [y, m, d] = isoStr.split('-');
+            return `${parseInt(d, 10)} ${MONTHS_TR[parseInt(m, 10) - 1]} ${y}`;
+        }
+
+        function formatCurrency(val) {
+            const num = Number(val) || 0;
+            const abs = Math.abs(num).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+            return `${num < 0 ? '-' : ''}$${abs}`;
+        }
+
+        function formatCompactCurrency(val) {
+            const num = Number(val) || 0;
+            const abs = Math.abs(num);
+            if (abs >= 1000) {
+                return `${num < 0 ? '-' : ''}$${(abs / 1000).toFixed(1)}k`;
+            }
+            return `${num < 0 ? '-' : ''}$${abs.toFixed(0)}`;
+        }
+
+        function escapeHTML(str) {
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;');
+        }
+
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            const border = type === 'success' ? 'border-emerald-500/50 text-emerald-300' : 'border-gray-600 text-gray-200';
+            toast.className = `px-4 py-2.5 rounded-xl bg-surface border ${border} shadow-xl text-xs font-medium transition-all duration-300`;
+            toast.textContent = message;
+            container.appendChild(toast);
+
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        window.onload = function () {
+            initApp();
+        };
+    </script>
+</body>
+</html>
